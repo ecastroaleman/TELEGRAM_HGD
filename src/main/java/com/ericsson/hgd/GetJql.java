@@ -12,10 +12,7 @@ public class GetJql {
 		
 		SearchRequestManager srm = ComponentAccessor.getComponentOfType(SearchRequestManager.class);
 		List<SearchRequest> filter = srm.findByNameIgnoreCase("Bug_Para_Alertar");
-		// or get SearchRequest object by id
-		// filter = srm.getSharedEntity(10000L);
-
-		// part most interesting for you
+		
 		 ((SearchRequest) filter).getQuery().getQueryString();
 
 	}

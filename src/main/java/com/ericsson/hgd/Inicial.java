@@ -10,13 +10,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -40,7 +37,7 @@ public class Inicial {
 	    
 	public static void main(String[] args) throws Exception {
 		try {
-		PropertyConfigurator.configure("log4j.properties");
+		
 		lg.info("Creando Conexión a Jira...");
 		JiraRestClient connJira = getclienteJira();
 		lg.info("Obteniendo Tickets...");	
