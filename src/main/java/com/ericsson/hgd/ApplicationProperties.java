@@ -42,4 +42,5 @@ public enum ApplicationProperties {
     public String chatErrores(){return properties.getProperty("CHATERRORES");}
     public String getJQL(){return properties.getProperty("JQL");}
     public String getFilterID() {return properties.getProperty("filterID");}
+    public String getFilterRep() {return properties.getProperty("filterIDRep");}
 }

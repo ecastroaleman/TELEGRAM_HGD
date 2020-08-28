@@ -146,10 +146,10 @@ public class Inicial {
 	}
 
 	public static ArrayList<Tickets> obtenerTickets(JiraRestClient pconnJira ) throws InterruptedException, ExecutionException  {
-	  ArrayList<Tickets> grupoTic = new ArrayList<Tickets>();
+	  ArrayList<Tickets> grupoTic = new ArrayList<>();
 	 		
 	  Promise<SearchResult> searchJqlPromise = pconnJira.getSearchClient().searchJql(obtenerJQL(pconnJira));
-	  
+	 
 	  for (Issue issue : searchJqlPromise.claim().getIssues()) {
 			  Tickets tic = new Tickets();
 			  String originador = "";
