@@ -29,7 +29,38 @@ public class SendMsg {
     public static final String CHATTEMP= ApplicationProperties.INSTANCE.chatTemporal();
     public static final Logger lg = Logger.getLogger(SendMsg.class);
     
- 	
+    public static String sendFileToTelegram(String ptexto, String pChat) throws JSONException, InvalidKeyException,  NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, IOException {
+    	String resp = "OK";
+        StringBuilder envio = new StringBuilder();
+        envio.append("curl -X  POST \"");
+        envio.append(ApplicationProperties.INSTANCE.urlTelegram());
+        envio.append(Security.decrypt("LNFDESAATLAS",APITOKEN));
+        envio.append("/sendDocument\" -F chat_id=");
+        envio.append("\""+pChat+"\"");
+        envio.append(" -F document=\"@");
+        envio.append(ptexto);
+        envio.append("\" --insecure");
+
+        lg.info(envio.toString());
+      
+    
+			Process process = Runtime.getRuntime().exec(envio.toString());
+			InputStream ins = process.getInputStream();
+					
+			  InputStreamReader isReader = new InputStreamReader(ins);
+		      BufferedReader reader = new BufferedReader(isReader);
+		      StringBuffer sb = new StringBuffer();
+			  StringBuffer resp2 = sb.append(reader.readLine());
+		   
+			  JSONObject response = new JSONObject(resp2.toString());
+						      
+		     resp=response.get("ok").toString();
+			 ins.close();
+			 process.destroy();
+		
+        return resp;
+    }
+    
     public String sendToTelegram(String ptexto, String pChat) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
     	String resp = "OK";
         StringBuilder envio3 = new StringBuilder();

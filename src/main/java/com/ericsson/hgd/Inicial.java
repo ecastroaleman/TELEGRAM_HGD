@@ -2,8 +2,6 @@ package com.ericsson.hgd;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -17,20 +15,18 @@ import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.domain.Filter;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
 
 
 public class Inicial {
 	
-	    private static final String JIRA_URL = ApplicationProperties.INSTANCE.getJiraUrl();
-	    private static final String JIRA_ADMIN_USERNAME = ApplicationProperties.INSTANCE.getJiraAdminUsername();
-	    private static final String JIRA_ADMIN_PASSWORD = ApplicationProperties.INSTANCE.getJiraAdminPassword();
+	    static final String JIRA_URL = ApplicationProperties.INSTANCE.getJiraUrl();
+	    static final String JIRA_ADMIN_USERNAME = ApplicationProperties.INSTANCE.getJiraAdminUsername();
+	    static final String JIRA_ADMIN_PASSWORD = ApplicationProperties.INSTANCE.getJiraAdminPassword();
 	    private static final String ENCODING = "UTF-8";
 	    static int totRegistros=0;
 	    public static final Logger lg = Logger.getLogger(Inicial.class);
@@ -39,7 +35,7 @@ public class Inicial {
 		try {
 		
 		lg.info("Creando Conexión a Jira...");
-		JiraRestClient connJira = getclienteJira();
+		JiraRestClient connJira = Utils.getclienteJira(JIRA_URL,JIRA_ADMIN_USERNAME,JIRA_ADMIN_PASSWORD);
 		lg.info("Obteniendo Tickets...");	
 		ArrayList<Tickets> totalTickets = obtenerTickets(connJira);
 		
@@ -126,17 +122,7 @@ public class Inicial {
 		
 		return retorno;
 	}
-	public static JiraRestClient getclienteJira () throws URISyntaxException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-		JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-		 JiraRestClient client = null;
-		 
-			 URI uri = new URI(JIRA_URL);	  
-			
-			 client = factory.createWithBasicHttpAuthentication(uri, JIRA_ADMIN_USERNAME, Security.decrypt("LNFDESAATLAS",JIRA_ADMIN_PASSWORD));
-		
-		return client;
-		
-	}
+	
 	public static String obtenerJQL(JiraRestClient pconnJira) throws InterruptedException, ExecutionException {
 		String filterID =  ApplicationProperties.INSTANCE.getFilterID();
 		Promise<Filter> fjql = pconnJira.getSearchClient().getFilter(Long.parseLong(filterID));

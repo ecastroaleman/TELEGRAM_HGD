@@ -43,4 +43,5 @@ public enum ApplicationProperties {
     public String getJQL(){return properties.getProperty("JQL");}
     public String getFilterID() {return properties.getProperty("filterID");}
     public String getFilterRep() {return properties.getProperty("filterIDRep");}
+    public String getSprintBoard() {return properties.getProperty("sprintBoard");}
 }

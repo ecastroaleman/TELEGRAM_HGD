@@ -1,5 +1,16 @@
 package com.ericsson.hgd;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -9,8 +20,21 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.codehaus.jettison.json.JSONException;
+import org.joda.time.DateTime;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.MetadataRestClient;
+import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.util.concurrent.Promise;
+
+
 
 public class Reporte {
 	   private static final String JIRA_URL = ApplicationProperties.INSTANCE.getJiraUrl();
@@ -21,9 +45,130 @@ public class Reporte {
 	    public static final Logger lg = Logger.getLogger(Reporte.class);
 	    
 	    
-		public static void iteraTickets( ArrayList<Tickets> datos) {
-			  
-		    StringBuilder msg = new StringBuilder();
+	  
+	    
+		public static void iteraTicketsExcel( ArrayList<Tickets> datos, String sprint) throws IOException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, JSONException {  
+		    String archCSV = "C:\\digicel2\\HGD_TELEGRAM_ES\\reporte\\";
+			DateTime fechahora = new DateTime();
+			String nombrerep = "reporte_"+fechahora.toString("ddMMyyyyHHmmss")+".xls";
+		
+			HSSFWorkbook libro = new HSSFWorkbook();
+			
+			HSSFSheet hojaFrontales = null;			
+			HSSFSheet hojaCdr = null;
+			HSSFSheet hojaEntradas = null;
+			HSSFSheet hojaAsignacion = null;
+			
+			int lineaF=0;
+			int lineaC=0;
+			int lineaE=0;
+			int lineaA=0;
+		
+			HSSFCell celda0 = null ;
+			HSSFCell celda1 = null ;
+			HSSFCell celda2 = null ;
+			HSSFCell celda5 = null ;
+			HSSFCell celda7 = null ;
+			HSSFCell celda12 = null ;
+			
+								
+			for (int i=0; i<datos.size(); i++) {
+				
+				switch(datos.get(i).getFixVersion()){
+				
+				case "Defectos Frontales" :
+					if (lineaF==0) {hojaFrontales = libro.createSheet("Frontales");}
+					HSSFRow filaF = hojaFrontales.createRow(lineaF);
+					lineaF++;
+					celda0 = filaF.createCell((short)0);
+					celda1 = filaF.createCell((short)1);
+					celda2 = filaF.createCell((short)2);
+					celda5 = filaF.createCell((short)5);
+					celda7 = filaF.createCell((short)7);
+					celda12 = filaF.createCell((short)12);
+					break;
+				case "Defectos CDR" :
+					if (lineaC==0) {hojaCdr = libro.createSheet("Cdr");}
+					HSSFRow filaC = hojaCdr.createRow(lineaC);
+					lineaC++;
+					celda0 = filaC.createCell((short)0);
+					celda1 = filaC.createCell((short)1);
+					celda2 = filaC.createCell((short)2);
+					celda5 = filaC.createCell((short)5);
+					celda7 = filaC.createCell((short)7);
+					celda12 = filaC.createCell((short)12);
+					break;
+				case "Defectos Entrada" :
+					if (lineaE==0) {hojaEntradas = libro.createSheet("Entrada");}
+					HSSFRow filaE = hojaEntradas.createRow(lineaE);
+					lineaE++;
+					celda0 = filaE.createCell((short)0);
+					celda1 = filaE.createCell((short)1);
+					celda2 = filaE.createCell((short)2);
+					celda5 = filaE.createCell((short)5);
+					celda7 = filaE.createCell((short)7);
+					celda12 = filaE.createCell((short)12);
+					break;
+				case "Defectos Asignacion" :
+					if (lineaA==0) {hojaAsignacion = libro.createSheet("Asignacion");}
+					HSSFRow filaA = hojaAsignacion.createRow(lineaA);
+					lineaA++;
+					celda0 = filaA.createCell((short)0);
+					celda1 = filaA.createCell((short)1);
+					celda2 = filaA.createCell((short)2);
+					celda5 = filaA.createCell((short)5);
+					celda7 = filaA.createCell((short)7);
+					celda12 = filaA.createCell((short)12);
+					break;		
+				}
+			
+			
+			HSSFRichTextString texto0 = new HSSFRichTextString(datos.get(i).getKey());
+			HSSFRichTextString texto1 = new HSSFRichTextString(sprint);
+			HSSFRichTextString texto2 = new HSSFRichTextString(datos.get(i).getStatus());
+			HSSFRichTextString texto5 = new HSSFRichTextString(datos.get(i).getEpicName());
+			HSSFRichTextString texto7 = new HSSFRichTextString(datos.get(i).getDateCreated());
+			HSSFRichTextString texto12 = new HSSFRichTextString(datos.get(i).getFixVersion());
+		
+			if (celda0 != null || celda2 != null || celda5 != null || celda7 != null || celda12 != null) {
+			celda0.setCellValue(texto0);
+			celda1.setCellValue(texto1);
+			celda2.setCellValue(texto2);
+			celda5.setCellValue(texto5);
+			celda7.setCellValue(texto7);
+			celda12.setCellValue(texto12);
+			}
+			
+			}	
+			
+			try {
+				   FileOutputStream elFichero = new FileOutputStream(archCSV+nombrerep);
+				   libro.write(elFichero);
+				   elFichero.close();
+				} catch (Exception e) {
+				   lg.info("Error en Archivo Excel -> "+e.getMessage());
+				}
+			
+			
+					lg.info("Sent ? -> "+SendMsg.sendFileToTelegram(archCSV+nombrerep, "400542399"));
+			
+			
+
+			
+			}
+	    
+		
+		public static void iteraTickets( ArrayList<Tickets> datos) throws IOException {  
+		    String archCSV = "C:\\digicel2\\HGD_TELEGRAM_ES\\reporte\\";
+			DateTime fechahora = new DateTime();
+			String nombrerep = "reporte_"+fechahora.toString("ddMMyyyyHHmmss")+".csv";
+					
+			StringBuilder sb = new StringBuilder();
+			FileOutputStream fos = new FileOutputStream(archCSV+nombrerep);
+			Writer out = new BufferedWriter(new OutputStreamWriter(
+				       fos, StandardCharsets.ISO_8859_1));
+			try {
+						
 			for (int i=0; i<datos.size(); i++) {
 			
 			lg.info(datos.get(i).getKey()+",<Sprint>,"+
@@ -31,36 +176,42 @@ public class Reporte {
 					datos.get(i).getEpicName()+",<causa>,"+
 			        datos.get(i).getDateCreated()+",,,,,"+
 					datos.get(i).getFixVersion());
-			}	 
+			
+		sb.append(datos.get(i).getKey()+",<Sprint>,"+
+			        datos.get(i).getStatus()+",<AsignadoA>,<sp>,"+
+					datos.get(i).getEpicName()+",<causa>,"+
+			        datos.get(i).getDateCreated()+",,,,,"+
+					datos.get(i).getFixVersion()+"\n");
+			
+			
+			}	
+			 out.write(sb.toString());
+			}catch(Exception e) {
+				e.printStackTrace();
+			}finally {
+	           out.close();
 			}
-	    
+			}
 	public static void main(String[] args) throws Exception {
 	
 		lg.info("Creando Conexión a Jira...");
-		JiraRestClient connJira = Inicial.getclienteJira();
+		JiraRestClient connJira = Utils.getclienteJira(JIRA_URL,JIRA_ADMIN_USERNAME,JIRA_ADMIN_PASSWORD);
 		lg.info("Obteniendo Tickets creados Hoy...");	
+		
+		String sprint = Utils.obtenerSprint(connJira, JIRA_ADMIN_USERNAME, Security.decrypt("LNFDESAATLAS",JIRA_ADMIN_PASSWORD));
+		
 		String filterRep =  ApplicationProperties.INSTANCE.getFilterRep();
+		lg.info(sprint);
 		ArrayList<Tickets> totalTickets = Utils.obtenerTickets(connJira, filterRep, true);
-		
 	
-		iteraTickets(totalTickets);
+		iteraTicketsExcel(totalTickets, sprint);
 
+/* 		Funciona para cambiar status
+ * Utils.moveStatus(connJira,4,"LNFDES-3");
+	
 		
-		
-/*Aun no funciona para asignar usuarios		
-		 final Map<String, Object> valuesMap = new HashMap<>(2);
-         valuesMap.put("name", "JCASTRO"); // server
-         valuesMap.put("accountId", "JCASTRO"); // cloud
-         IssueInputBuilder builder = new IssueInputBuilder();
-         
-		// Need to use "accountId" as specified here:
-         //    https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/
-         //
-         // See upstream fix for setAssigneeName:
-         //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff 
-         builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, new ComplexIssueInputFieldValue(valuesMap)));
 		*/
-		
+
 /* Funciona para agregar fixVersion		
 		Iterable<Version> vers = iss.getFixVersions();	
 		Iterator<Version> itvers = vers.iterator();

@@ -1,5 +1,14 @@
 package com.ericsson.hgd;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -7,20 +16,34 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.domain.Filter;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
 import com.atlassian.jira.rest.client.api.domain.IssueLink;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.Base64;
 
 public class Utils {
 	
@@ -217,6 +240,123 @@ public static String obtenerJQL(JiraRestClient pconnJira, String pfilter) throws
 	String jql = fjql.get().getJql();
 	lg.info(jql);		
 	return jql;
+}
+
+public static String asignarTicket(JiraRestClient pconnJira, String puserName, String pticket) {
+	try {
+	IssueInput issueInput = IssueInput.createWithFields(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, 
+			ComplexIssueInputFieldValue.with("name",puserName)));
+			pconnJira.getIssueClient().updateIssue(pticket, issueInput).claim();
+	return "OK";
+	}catch (Exception e) {
+		return "NOK";
+	}
+}
+
+
+public static String asignarSP(JiraRestClient pconnJira, int sp, String pticket) {
+	 //hgd: customfield_10012
+	 //local: customfield_10006
+	try {
+		FieldInput fieldInput = new FieldInput("customfield_10006",sp);
+		 
+		final IssueInput issueInput = new IssueInputBuilder().setFieldInput(fieldInput)
+	                .build();
+		
+		long timeout = 300;
+		pconnJira.getIssueClient().updateIssue(pticket, issueInput).get(timeout , TimeUnit.SECONDS);
+	return "OK";
+	}catch (Exception e) {
+		return "NOK";
+	}
+}
+
+public static String moveStatus(JiraRestClient pconnJira, int status, String pticket) {
+	
+	/* 761 End Development
+	 * 801 Block Issue
+	 * 831 Stop Progress
+	 * 5 Resolve Issue
+	 * 4 Start Progress
+	 */
+	try {
+		 Issue ticket = pconnJira.getIssueClient().getIssue(pticket).get();
+		 
+		  pconnJira
+         .getIssueClient()
+         .transition(
+       		  ticket.getTransitionsUri(), new TransitionInput(status))
+         .claim();
+
+	return "OK";
+	}catch (Exception e) {
+		return "NOK";
+	}
+}
+
+public static String obtenerSprint(JiraRestClient pconnJira, String puser, String ppass) {
+	  String resp = "";
+	  final String SPRINT = ApplicationProperties.INSTANCE.getSprintBoard();    
+      ClientResponse response;
+      String auth = new String(Base64.encode(puser + ":" + ppass));
+      final String headerAuthorization = "Authorization";
+      final String headerAuthorizationValue = "Basic " + auth;
+      final String headerType = "application/json";
+      Client client = Client.create();
+
+      WebResource webResource = client.resource(SPRINT);
+     
+     response =  webResource.header(headerAuthorization, headerAuthorizationValue).type(headerType)
+   		  .accept(headerType).get(ClientResponse.class);
+		
+     
+      InputStream is = response.getEntityInputStream();
+     
+      InputStreamReader isReader = new InputStreamReader(is);
+      BufferedReader reader = new BufferedReader(isReader);
+      Reader isr = new InputStreamReader(is);
+      StringBuffer sb = new StringBuffer();
+      String str;
+      try {
+		
+    	  while((str = reader.readLine())!= null){
+		     sb.append(str);
+		  }
+		
+    	  JSONObject rjson;
+		try {
+			rjson = new JSONObject(sb.toString());
+			 JSONArray rjson2 =  (JSONArray) rjson.get("values");
+             rjson = new JSONObject(rjson2.get(0).toString());
+             resp = rjson.get("name").toString().substring(0,5);
+		} catch (JSONException e) {
+			
+			e.printStackTrace();
+		}	
+         
+        
+          isr.close();
+    	  
+    	  
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+     
+     
+	return resp;
+}
+
+public static JiraRestClient getclienteJira (String purl, String puser, String ppass) throws URISyntaxException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+	JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+	 JiraRestClient client = null;
+	 
+		 URI uri = new URI(purl);	  
+		
+		 client = factory.createWithBasicHttpAuthentication(uri, puser, Security.decrypt("LNFDESAATLAS",ppass));
+	
+	return client;
+	
 }
 	 
 }
