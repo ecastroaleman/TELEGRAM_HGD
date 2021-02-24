@@ -174,7 +174,7 @@ public class Inicial {
 	            while(it.hasNext()) {
 	                Version element = it.next();
 	             	                
-	                if (!element.getName().equals("Defectos ATLAS")) {
+	                if (!element.getName().equals("Defectos ATLAS") && !element.getName().contains("Analisis")) {
 	                	
 	                if (  (versiones.toString().contains("Nuevo Asignador") && element.getName().equals("Defectos Asignacion"))
 	                  ||  (versiones.toString().contains("Defectos Asignacion") && element.getName().equals("Defectos Nuevo Asignador"))

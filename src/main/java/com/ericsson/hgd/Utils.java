@@ -52,6 +52,9 @@ public class Utils {
 
 	}
 	  public static final Logger lg = Logger.getLogger(Utils.class);
+	  private static final String JIRA_URL = ApplicationProperties.INSTANCE.getJiraUrl();
+	  private static final String JIRA_ADMIN_USERNAME = ApplicationProperties.INSTANCE.getJiraAdminUsername();
+	  private static final String JIRA_ADMIN_PASSWORD = ApplicationProperties.INSTANCE.getJiraAdminPassword();
 	  
 	public static void setIssueLabels(String plabel, JiraRestClient pconnJira, Issue pissue) {
 		  Set<String> lb = pissue.getLabels();
@@ -103,7 +106,7 @@ public class Utils {
 	    }
 	
 	 public static String obtenerNombreEpica(Issue ticket, JiraRestClient pconnJira) throws InterruptedException, ExecutionException {
-			String resp = "N/A";
+			String resp = "DRS No Relacionado";
 			String cloner = "Cloners";
 			
 			if (ticket.getFieldByName("Epic Link").getValue() != null ) {
@@ -219,6 +222,14 @@ public class Utils {
 		                
 		                }
 		            }
+		            
+		            try {
+						JSONObject creador = new JSONObject(issue.getFieldByName("Creator").getValue().toString());
+						originador  = creador.get("displayName").toString();				
+					} catch (JSONException e) {
+						lg.error(e.getMessage(),e);
+						originador = "";
+					}
 		            	
 		            tic.setCreatedBy(originador);
 		            tic.setDetectionOn(detectionOn);
@@ -355,6 +366,20 @@ public static JiraRestClient getclienteJira (String purl, String puser, String p
 		
 		 client = factory.createWithBasicHttpAuthentication(uri, puser, Security.decrypt("LNFDESAATLAS",ppass));
 	
+	return client;
+	
+}
+
+public static JiraRestClient getclienteJira () throws Exception {
+	JiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+	 JiraRestClient client = null;
+	 try {
+		 URI uri = new URI(JIRA_URL);	  
+		
+		 client = factory.createWithBasicHttpAuthentication(uri, JIRA_ADMIN_USERNAME, Security.decrypt("LNFDESAATLAS",JIRA_ADMIN_PASSWORD));
+	 }catch(Exception e) {
+		 throw  new Exception("No se logró obtener conexión : "+e.getMessage(), e);
+	 }
 	return client;
 	
 }

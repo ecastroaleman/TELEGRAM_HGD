@@ -2,6 +2,7 @@ package com.ericsson.hgd;
 
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -51,12 +52,27 @@ public class App
 		JiraRestClient connJira = Utils.getclienteJira(JIRA_URL,JIRA_ADMIN_USERNAME,JIRA_ADMIN_PASSWORD);
 		lg.info("Obteniendo Tickets...");	
 	
-		Utils.asignarSP(connJira, 21, "LNFDES-4")	;	 
+	//	Utils.asignarSP(connJira, 21, "LNFDES-4")	;	 
 		 
+		 Issue ticket = connJira.getIssueClient().getIssue("LNFDESAATLAS-10808").get();
 		
-		 
+		 ArrayList<Tickets> datos  = Inicial.obtenerTickets(connJira);
+		// Inicial.iteraTickets(totalTickets);
 		
-		
+		  StringBuilder msg = new StringBuilder();
+			for (int i=0; i<datos.size(); i++) {
+				 
+				    msg.append("\nAtender el Ticket: "+datos.get(i).getKey());   
+				    msg.append("\nCreado el      : "+datos.get(i).getDateCreated());
+				    msg.append("\nCreador por   : "+datos.get(i).getCreatedBy());
+				    msg.append("\nPrioridad        : "+datos.get(i).getPriority());
+				    msg.append("\nStatus Actual  : "+datos.get(i).getStatus());
+				    msg.append("\nDetectado en  : "+datos.get(i).getDetectionOn());
+				    msg.append("\nPara el Equipo : #TEAM# ");
+				    msg.append("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+				    
+			}
+			lg.info(msg);
 			
 	/*	Iterable<Transition> transitions = null;
 		 Issue ticket = connJira.getIssueClient().getIssue("LNFDESAATLAS-6115").get();
@@ -101,10 +117,10 @@ public class App
 		  
 		  
       
-        
+		connJira.close();        
         
         }
 
-     
+
         
 }

@@ -91,6 +91,7 @@ public class Security {
 	 String enc = Security.encrypt("LNFDESAATLAS", args[0]);
 	 lg.info("Encript ->"+enc);
 	 lg.info("Decrypt ->"+Security.decrypt("LNFDESAATLAS", enc));
+	 lg.info("Decrypt ->"+Security.decrypt("LNFDESAATLAS", args[0]));
 	 
  }
 }
